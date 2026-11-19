@@ -71,8 +71,12 @@
             const porcentagem = (total / meta) * 100;
             document.getElementById('barra').style.width = Math.min(porcentagem, 100) + '%';
             
+            // Formatando valores para o padrão brasileiro
+            const totalFormatado = total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const metaFormatada = meta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
             document.getElementById('status-texto').innerText = 
-                `Arrecadado: R$ ${total.toFixed(2)} (${qtdDoacoes} doações recebidas)`;
+                `Arrecadado: R$ ${totalFormatado} de R$ ${metaFormatada} (${qtdDoacoes} doações recebidas)`;
                 
         } catch (err) {
             console.error("Erro ao carregar dados:", err);
@@ -103,7 +107,7 @@
                 body: arquivo
             });
 
-            // 2. Registro na Tabela 'doacoes'
+            // 2. Registro na Tabela
             const tableUrl = `https://dashboardclarobrasil.table.core.windows.net/doacoes`;
             await fetch(tableUrl + SAS_TABLE, {
                 method: 'POST',
