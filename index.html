@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajuda Solidária - Exame Médico</title>
+    <style>
+        :root { --primary: #00ff88; --bg: #121212; --card: #1e1e1e; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
+        .container { background: var(--card); padding: 30px; border-radius: 15px; width: 100%; max-width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        /* Barra de Progresso */
+        .progress-bg { background: #333; height: 20px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
+        
+        .pix-box { background: #2a2a2a; border-left: 4px solid var(--primary); padding: 15px; margin: 20px 0; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; background: #333; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: black; margin-top: 10px; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Apoie esta causa</h2>
+    <p>Precisamos arrecadar <strong>R$ 1.700,00</strong> para o exame.</p>
+    
+    <!-- Barra de Progresso -->
+    <div class="progress-bg"><div id="barra" class="progress-bar"></div></div>
+    <p id="status-texto">Arrecadado: R$ 0,00 (0%)</p>
+
+    <div class="pix-box">
+        <p>Chave PIX:</p>
+        <strong style="font-size: 1.2em;">SUA-CHAVE-AQUI</strong>
+    </div>
+
+    <form id="formDoacao">
+        <input type="text" placeholder="Nome do Doador" required>
+        <input type="number" placeholder="Valor doado (R$)" required>
+        <label style="font-size: 0.8em; color: #aaa;">Anexar comprovante:</label>
+        <input type="file" accept="image/*" required>
+        <button type="submit">Enviar Doação</button>
+    </form>
+</div>
+
+<script>
+    // Valores para teste (futuramente virão do seu banco de dados)
+    const meta = 1700;
+    const atual = 425; // Exemplo de valor já arrecadado
+    
+    function atualizarInterface() {
+        const porcentagem = (atual / meta) * 100;
+        document.getElementById('barra').style.width = porcentagem + '%';
+        document.getElementById('status-texto').innerText = 
+            `Arrecadado: R$ ${atual.toFixed(2)} de R$ ${meta.toFixed(2)} (${porcentagem.toFixed(0)}%)`;
+    }
+
+    atualizarInterface();
+</script>
+
+</body>
+</html>
