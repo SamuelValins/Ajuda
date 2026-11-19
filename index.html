@@ -34,7 +34,8 @@
 
     <form id="formDoacao">
         <input type="text" id="nomeDoador" placeholder="Nome do Doador" required>
-        <input type="number" id="valorDoado" placeholder="Valor doado (R$)" required>
+        <!-- Alterado para 'text' para permitir a máscara de moeda -->
+        <input type="text" id="valorDoado" placeholder="Valor doado (R$)" required oninput="mascaraMoeda(this)">
         <label style="font-size: 0.8em; color: #aaa;">Anexar comprovante:</label>
         <input type="file" id="arquivoComprovante" accept="image/*" required>
         <button type="submit" id="btnSubmit">Enviar Doação</button>
@@ -42,20 +43,28 @@
 </div>
 
 <script>
+    // --- MÁSCARA MONETÁRIA ---
+    function mascaraMoeda(i) {
+        var v = i.value.replace(/\D/g, '');
+        v = (v / 100).toFixed(2) + '';
+        v = v.replace(".", ",");
+        v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+        v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+        i.value = v;
+    }
+
     // --- SUAS SAS TOKENS ---
     const SAS_BLOB = "?sv=2026-02-06&ss=bt&srt=sco&sp=rwact&se=2027-01-19T21:24:32Z&st=2026-11-19T13:09:32Z&spr=https&sig=F8Q3bE8yLQQPoQxyk%2B6v7iDEi%2BkBQ68HuoHUawTwaJA%3D";
     const SAS_TABLE = "?sv=2026-02-06&ss=bt&srt=sco&sp=rwact&se=2027-01-19T21:24:32Z&st=2026-11-19T13:09:32Z&spr=https&sig=F8Q3bE8yLQQPoQxyk%2B6v7iDEi%2BkBQ68HuoHUawTwaJA%3D";
     
     const meta = 1700;
 
-    // --- FUNÇÃO PARA BUSCAR, SOMAR E CONTAR VALORES ---
     async function atualizarTotal() {
         try {
             const response = await fetch(`https://dashboardclarobrasil.table.core.windows.net/doacoes()${SAS_TABLE}`, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json;odata=nometadata' }
             });
-            
             const data = await response.json();
             
             let total = 0;
@@ -71,25 +80,22 @@
             const porcentagem = (total / meta) * 100;
             document.getElementById('barra').style.width = Math.min(porcentagem, 100) + '%';
             
-            // Formatando valores para o padrão brasileiro
             const totalFormatado = total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const metaFormatada = meta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             document.getElementById('status-texto').innerText = 
                 `Arrecadado: R$ ${totalFormatado} de R$ ${metaFormatada} (${qtdDoacoes} doações recebidas)`;
-                
         } catch (err) {
-            console.error("Erro ao carregar dados:", err);
             document.getElementById('status-texto').innerText = "Erro ao buscar dados.";
         }
     }
 
-    // --- ENVIO DO FORMULÁRIO ---
     document.getElementById('formDoacao').addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const nome = document.getElementById('nomeDoador').value;
-        const valor = document.getElementById('valorDoado').value;
+        // Converte o valor formatado (ex: 1.200,50) para float (1200.50) para salvar no banco
+        const valor = parseFloat(document.getElementById('valorDoado').value.replace(/\./g, '').replace(',', '.'));
         const arquivo = document.getElementById('arquivoComprovante').files[0];
         const btn = document.getElementById('btnSubmit');
 
@@ -97,40 +103,27 @@
         btn.innerText = "Enviando...";
 
         try {
-            // 1. Upload da Foto
             const nomeArquivo = `${Date.now()}_${nome.replace(/\s+/g, '')}.jpg`;
             const blobUrl = `https://dashboardclarobrasil.blob.core.windows.net/comprovantes/${nomeArquivo}${SAS_BLOB}`;
             
-            await fetch(blobUrl, {
-                method: 'PUT',
-                headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': arquivo.type },
-                body: arquivo
-            });
+            await fetch(blobUrl, { method: 'PUT', headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': arquivo.type }, body: arquivo });
 
-            // 2. Registro na Tabela
             const tableUrl = `https://dashboardclarobrasil.table.core.windows.net/doacoes`;
             await fetch(tableUrl + SAS_TABLE, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({
-                    PartitionKey: "doacoes",
-                    RowKey: Date.now().toString(),
-                    Nome: nome,
-                    Valor: valor
-                })
+                body: JSON.stringify({ PartitionKey: "doacoes", RowKey: Date.now().toString(), Nome: nome, Valor: valor })
             });
 
             alert("Doação enviada com sucesso!");
             location.reload();
         } catch (err) {
-            console.error(err);
-            alert("Erro no envio! Verifique se o CORS está configurado no Azure.");
+            alert("Erro no envio!");
             btn.disabled = false;
             btn.innerText = "Enviar Doação";
         }
     });
 
-    // Iniciar ao carregar
     atualizarTotal();
 </script>
 
