@@ -48,10 +48,9 @@
     
     const meta = 1700;
 
-    // --- FUNÇÃO PARA BUSCAR E SOMAR VALORES ---
+    // --- FUNÇÃO PARA BUSCAR, SOMAR E CONTAR VALORES ---
     async function atualizarTotal() {
         try {
-            // Buscando na tabela 'doacoes'
             const response = await fetch(`https://dashboardclarobrasil.table.core.windows.net/doacoes()${SAS_TABLE}`, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json;odata=nometadata' }
@@ -60,7 +59,8 @@
             const data = await response.json();
             
             let total = 0;
-            const lista = data.value || data; // Captura o array de doações
+            const lista = data.value || data; 
+            const qtdDoacoes = Array.isArray(lista) ? lista.length : 0;
             
             if (Array.isArray(lista)) {
                 lista.forEach(item => {
@@ -70,10 +70,12 @@
 
             const porcentagem = (total / meta) * 100;
             document.getElementById('barra').style.width = Math.min(porcentagem, 100) + '%';
+            
             document.getElementById('status-texto').innerText = 
-                `Arrecadado: R$ ${total.toFixed(2)} de R$ ${meta.toFixed(2)} (${porcentagem.toFixed(0)}%)`;
+                `Arrecadado: R$ ${total.toFixed(2)} (${qtdDoacoes} doações recebidas)`;
+                
         } catch (err) {
-            console.error("Erro ao carregar total:", err);
+            console.error("Erro ao carregar dados:", err);
             document.getElementById('status-texto').innerText = "Erro ao buscar dados.";
         }
     }
@@ -118,7 +120,7 @@
             location.reload();
         } catch (err) {
             console.error(err);
-            alert("Erro no envio! Verifique se o CORS está configurado no Azure para o seu site.");
+            alert("Erro no envio! Verifique se o CORS está configurado no Azure.");
             btn.disabled = false;
             btn.innerText = "Enviar Doação";
         }
