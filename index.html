@@ -48,15 +48,22 @@
     
     const meta = 1700;
 
-    // --- FUNÇÃO PARA BUSCAR E SOMAR VALORES AUTOMATICAMENTE ---
+    // --- FUNÇÃO PARA BUSCAR E SOMAR VALORES ---
     async function atualizarTotal() {
         try {
-            const response = await fetch(`https://dashboardclarobrasil.table.core.windows.net/Doacoes()${SAS_TABLE}`);
+            // Buscando na tabela 'doacoes'
+            const response = await fetch(`https://dashboardclarobrasil.table.core.windows.net/doacoes()${SAS_TABLE}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json;odata=nometadata' }
+            });
+            
             const data = await response.json();
             
             let total = 0;
-            if (data.value) {
-                data.value.forEach(item => {
+            const lista = data.value || data; // Captura o array de doações
+            
+            if (Array.isArray(lista)) {
+                lista.forEach(item => {
                     total += parseFloat(item.Valor || 0);
                 });
             }
@@ -67,7 +74,7 @@
                 `Arrecadado: R$ ${total.toFixed(2)} de R$ ${meta.toFixed(2)} (${porcentagem.toFixed(0)}%)`;
         } catch (err) {
             console.error("Erro ao carregar total:", err);
-            document.getElementById('status-texto').innerText = "Erro ao carregar dados.";
+            document.getElementById('status-texto').innerText = "Erro ao buscar dados.";
         }
     }
 
@@ -94,13 +101,13 @@
                 body: arquivo
             });
 
-            // 2. Registro na Tabela
-            const tableUrl = `https://dashboardclarobrasil.table.core.windows.net/Doacoes${SAS_TABLE}`;
-            await fetch(tableUrl, {
+            // 2. Registro na Tabela 'doacoes'
+            const tableUrl = `https://dashboardclarobrasil.table.core.windows.net/doacoes`;
+            await fetch(tableUrl + SAS_TABLE, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({
-                    PartitionKey: "Doacoes",
+                    PartitionKey: "doacoes",
                     RowKey: Date.now().toString(),
                     Nome: nome,
                     Valor: valor
@@ -111,7 +118,7 @@
             location.reload();
         } catch (err) {
             console.error(err);
-            alert("Erro ao enviar. Verifique se o CORS está configurado no Azure.");
+            alert("Erro no envio! Verifique se o CORS está configurado no Azure para o seu site.");
             btn.disabled = false;
             btn.innerText = "Enviar Doação";
         }
