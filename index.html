@@ -17,6 +17,7 @@
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; background: #333; color: white; box-sizing: border-box; }
         button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: black; margin-top: 10px; }
         button:hover { opacity: 0.9; }
+        .pix-info { font-size: 0.9em; color: #ccc; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -30,8 +31,9 @@
     <p id="status-texto">Arrecadado: R$ 0,00 (0%)</p>
 
     <div class="pix-box">
-        <p>Chave PIX:</p>
-        <strong style="font-size: 1.2em;">SUA-CHAVE-AQUI</strong>
+        <p>Chave PIX (Bradesco):</p>
+        <strong style="font-size: 1.2em;">26048764855</strong>
+        <div class="pix-info">Valdirene Caetano Sobrinho Ferraz</div>
     </div>
 
     <form id="formDoacao">
@@ -44,9 +46,9 @@
 </div>
 
 <script>
-    // Valores para teste (futuramente virão do seu banco de dados)
+    // Valores atualizados
     const meta = 1700;
-    const atual = 425; // Exemplo de valor já arrecadado
+    const atual = 0; // Zerado conforme solicitado
     
     function atualizarInterface() {
         const porcentagem = (atual / meta) * 100;
